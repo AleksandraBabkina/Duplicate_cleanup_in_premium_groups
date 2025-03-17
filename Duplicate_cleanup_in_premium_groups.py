@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine, Column, String, Float, select, or_, and_
 from sqlalchemy.orm import sessionmaker, declarative_base
 import pandas as pd
+import time
+from IPython.display import display
 
 # Connection setup - DO NOT MODIFY
 username = 'username'
@@ -20,7 +22,6 @@ session = Session()
 # Direct query for data
 query1 = """
 select distinct agentgroup 
-
 from v_tablefuncvalue
 left join (select distinct prodgroupid, name region
            from v_prodgroup
@@ -47,22 +48,16 @@ and tablefuncid = 3002
 """
 sp = pd.read_sql(query1, engine)
 sp = sp['agentgroup'].tolist()
-sp
-
-
-import pandas as pd
-import time
-from IPython.display import display
 
 df = pd.DataFrame()
 pd.set_option('display.max_columns', None)
 # pd.set_option('display.max_rows', None)
 
 def process_group(column, df):
-    filter_df = rdf
+    filter_df = df
 
     # Data processing using process_data
-    filter_df = process_data(filter_df)
+    filter_df = process_data(filter_df, column)
 
     previous_df = pd.DataFrame()
     final_combined_df = filter_df
@@ -101,7 +96,6 @@ parnum9 ProLot, parnum10 ProLdo, parnum11 MinLot, parnum12 MinLdo, parnum13 YuLo
 parnum15 KASKOot, parnum16 KASKOdo, agenttype.agenttype AgentType, agentgroup.agentgroup AgentGroup,
 parnum17 KBMot, parnum18 KBMdo, parnum19 EOSAGOut, parnum20 EOSAGDo,
 parnum21 DSot, parnum22 DDo, parnum23 KSot, parnum24 KSDO, parnum25 KPot, parnum26 KPdo, parnum27 PresenceOtherSkot, parnum28 PresenceOtherSdo
-     
 from v_tablefuncvalue
 left join (select distinct prodgroupid, name region
            from v_prodgroup
@@ -130,7 +124,7 @@ and agentgroup.agentgroup  in ('{column}') -- if you want to download all groups
     df = pd.read_sql(query, engine)
     return df
 
-def process_data(df):
+def process_data(df, column):
     # Convert 'VALUE' column to string type
     df['value'] = df['value'].astype(str)
 
@@ -161,6 +155,7 @@ def process_data(df):
             filter_df = result_df[result_df.set_index(['region', 'tipts', 'grupaagentov']).index.isin(reaped_group)]
             
     except KeyError as e:
+        print(f"Error processing data: {e}")
         pass
 
     return filter_df
@@ -168,7 +163,7 @@ def process_data(df):
 # New function
 def combine_rows(filter_df):
     combined_df = pd.DataFrame()
-    for name, group in filter_df.groupby(['region', 'types', 'agentgroup', 'agenttype']):
+    for name, group in filter_df.groupby(['region', 'tipts', 'agentgroup', 'agenttype']):
         group = group.drop_duplicates()
         while len(group) > 1:
             combinated = False
@@ -236,5 +231,5 @@ def combine_rows(filter_df):
 # Loop over each column and analyze the data
 for column in sp:
     rdf = analyze_column(column, engine)
-    process_group(column, df)
+    process_group(column, rdf)
     time.sleep(0.3)

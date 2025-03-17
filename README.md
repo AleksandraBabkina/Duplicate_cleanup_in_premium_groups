@@ -1,6 +1,6 @@
 # Duplicate_cleanup_in_premium_groups
 ## Description
-An insurance premium is a monetary amount that the client (policyholder) agrees to pay regularly or in a lump sum to the insurance company in exchange for the company’s commitment to compensate for losses in the event of an insured event. These contributions are the primary source of income for the insurer and serve to form a financial “cushion” for potential insurance payouts.
+An insurance premium is the amount the policyholder pays to the insurance company, either regularly or as a lump sum, in exchange for coverage against potential losses. These payments are the insurer’s primary income and form a financial reserve for claims.
 
 This program identifies and removes duplicate records in insurance premium groups by consolidating similar rows based on predefined criteria to ensure data consistency. It operates on insurance data, specifically focusing on groups of premiums, such as auto and health insurance, and it organizes data based on different agent categories, regions, and premium types. The program connects to an Oracle database, extracts relevant data, and processes it to remove duplicate or conflicting entries, ensuring only the most accurate and representative data remains for further analysis.
 

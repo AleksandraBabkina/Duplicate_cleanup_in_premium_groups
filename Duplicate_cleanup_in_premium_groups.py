@@ -19,31 +19,31 @@ session = Session()
 
 # Direct query for data
 query1 = """
-select distinct aggr.agentgroup
+select distinct agentgroup 
 
-from diasoft_test.v_TABLEFUNCVALUE CV
-left join (select distinct PRODGROUPID, NAME REGION
-           from diasoft_test.v_PRODGROUP
-           where INSPRODUCTID = 86 and 
-           RULEGROUPID = 663) reg on reg.PRODGROUPID=CV.PARREF1
+from v_tablefuncvalue
+left join (select distinct prodgroupid, name region
+           from v_prodgroup
+           where inspproductid = 86 and 
+           rulegroupid = 663) region on region.prodgroupid=parref1
            
-left join (select distinct PRODGROUPID, NAME agenttype
-           from diasoft_test.v_PRODGROUP
-           where INSPRODUCTID = 86 and 
-           RULEGROUPID = 903) tipag on tipag.PRODGROUPID=CV.PARREF3
+left join (select distinct prodgroupid, name agenttype
+           from v_prodgroup
+           where inspproductid = 86 and 
+           rulegroupid = 903) agenttype on agenttype.prodgroupid=parref3
            
-left join (select distinct PRODGROUPID, NAME agentgroup
-           from diasoft_test.v_PRODGROUP 
-           where INSPRODUCTID = 86 and 
-           RULEGROUPID = 383
-          ) aggr on aggr.PRODGROUPID=CV.PARREF4   
+left join (select distinct prodgroupid, name agentgroup
+           from v_prodgroup 
+           where inspproductid = 86 and 
+           rulegroupid = 383
+          ) agentgroup on agentgroup.prodgroupid=parref4   
 
 where 1=1
- and cv.DATEBEG =  (select max(CV1.datebeg) from diasoft_test.v_TABLEFUNCVALUE CV1 
- where cv1.TABLEFUNCID = cv.TABLEFUNCID and cv1.datebeg <=  trunc(sysdate)
+ and datebeg =  (select max(datebeg) from v_tablefuncvalue 
+ where tablefuncid = tablefuncid and datebeg <= trunc(sysdate)
  ) 
 
-and TABLEFUNCID = 3002
+and tablefuncid = 3002
 """
 sp = pd.read_sql(query1, engine)
 sp = sp['agentgroup'].tolist()
@@ -79,64 +79,64 @@ def process_group(column, df):
             return
 
     # Check for outliers after the loop ends
-    group_sizes = final_combined_df.groupby(['РЕГИОН', 'ТИПТС', 'ГРУППААГЕНТОВ', 'ТИПАГЕНТА']).size()
+    group_sizes = final_combined_df.groupby(['region', 'tipts', 'grupaagentov', 'tipagenta']).size()
     if (group_sizes > 1).any():
         print(f"There are outliers in group {column}: \n")
-        display(final_combined_df[final_combined_df.groupby(['РЕГИОН', 'ТИПТС', 'ГРУППААГЕНТОВ', 'ТИПАГЕНТА']).transform('size') > 1])
+        display(final_combined_df[final_combined_df.groupby(['region', 'tipts', 'grupaagentov', 'tipagenta']).transform('size') > 1])
     else:
         print(f"There are no outliers in group {column}")
 
 def analyze_column(column, engine):
     query = f"""
-select  VALUENUMBER Value, reg.REGION Region, CV.PARNUM1 BSot, CV.PARNUM2 BSdo,
-case when CV.PARREF2=1 then 'Motorcycles, mopeds and light quad bikes'
-     when CV.PARREF2=4 then 'Buses'
-     when CV.PARREF2=3 then 'Trucks'
-     when CV.PARREF2=2 then 'Passenger cars'
-     when CV.PARREF2=7 then 'Tractors, self-propelled road construction and other machines, except vehicles without wheels'
-     when CV.PARREF2=6 then 'Trams'
-     when CV.PARREF2=5 then 'Trolleybuses' end VehicleType, CV.PARSTR1 TerOt, CV.PARSTR2 TerDo,
-CV.PARNUM3 KOot, CV.PARNUM4 KOdo, CV.PARNUM5 KMot,  CV.PARNUM6 KMdo, CV.PARNUM7 KTot, CV.PARNUM8 KTdo,
-CV.PARNUM9 ProLot, CV.PARNUM10 ProLdo, CV.PARNUM11 MinLot, CV.PARNUM12 MinLdo, CV.PARNUM13 YuLot, CV.PARNUM14 YuLdo,
-CV.PARNUM15 KASKOot, CV.PARNUM16 KASKOdo, tipag.agenttype AgentType, aggr.agentgroup AgentGroup,
-CV.PARNUM17 KBMot, CV.PARNUM18 KBMdo, CV.PARNUM19 EOSAGOut, CV.PARNUM20 EOSAGDo,
-CV.PARNUM21 DSot, CV.PARNUM22 DDo, CV.PARNUM23 KSot, CV.PARNUM24 KSDO, CV.PARNUM25 KPot, CV.PARNUM26 KPdo, cv.PARNUM27 PresenceOtherSkot, cv.PARNUM28 PresenceOtherSdo
+select  valuenumber Value, region.region Region, parnum1 BSot, parnum2 BSdo,
+case when parref2=1 then 'Motorcycles, mopeds and light quad bikes'
+     when parref2=4 then 'Buses'
+     when parref2=3 then 'Trucks'
+     when parref2=2 then 'Passenger cars'
+     when parref2=7 then 'Tractors, self-propelled road construction and other machines, except vehicles without wheels'
+     when parref2=6 then 'Trams'
+     when parref2=5 then 'Trolleybuses' end VehicleType, parstr1 TerOt, parstr2 TerDo,
+parnum3 KOot, parnum4 KOdo, parnum5 KMot,  parnum6 KMdo, parnum7 KTot, parnum8 KTdo,
+parnum9 ProLot, parnum10 ProLdo, parnum11 MinLot, parnum12 MinLdo, parnum13 YuLot, parnum14 YuLdo,
+parnum15 KASKOot, parnum16 KASKOdo, agenttype.agenttype AgentType, agentgroup.agentgroup AgentGroup,
+parnum17 KBMot, parnum18 KBMdo, parnum19 EOSAGOut, parnum20 EOSAGDo,
+parnum21 DSot, parnum22 DDo, parnum23 KSot, parnum24 KSDO, parnum25 KPot, parnum26 KPdo, parnum27 PresenceOtherSkot, parnum28 PresenceOtherSdo
      
-from diasoft_test.v_TABLEFUNCVALUE CV
-left join (select distinct PRODGROUPID, NAME REGION
-           from diasoft_test.v_PRODGROUP
-           where INSPRODUCTID = 86 and 
-           RULEGROUPID = 663) reg on reg.PRODGROUPID=CV.PARREF1
+from v_tablefuncvalue
+left join (select distinct prodgroupid, name region
+           from v_prodgroup
+           where inspproductid = 86 and 
+           rulegroupid = 663) region on region.prodgroupid=parref1
            
-left join (select distinct PRODGROUPID, NAME agenttype
-           from diasoft_test.v_PRODGROUP
-           where INSPRODUCTID = 86 and 
-           RULEGROUPID = 903) tipag on tipag.PRODGROUPID=CV.PARREF3
+left join (select distinct prodgroupid, name agenttype
+           from v_prodgroup
+           where inspproductid = 86 and 
+           rulegroupid = 903) agenttype on agenttype.prodgroupid=parref3
            
-left join (select distinct PRODGROUPID, NAME agentgroup
-           from diasoft_test.v_PRODGROUP 
-           where INSPRODUCTID = 86 and 
-           RULEGROUPID = 383
-          ) aggr on aggr.PRODGROUPID=CV.PARREF4   
+left join (select distinct prodgroupid, name agentgroup
+           from v_prodgroup 
+           where inspproductid = 86 and 
+           rulegroupid = 383
+          ) agentgroup on agentgroup.prodgroupid=parref4   
 
 where 1=1
- and cv.DATEBEG =  (select max(CV1.datebeg) from diasoft_test.v_TABLEFUNCVALUE CV1 
- where cv1.TABLEFUNCID = cv.TABLEFUNCID and cv1.datebeg <=  trunc(sysdate)
+ and datebeg =  (select max(datebeg) from v_tablefuncvalue 
+ where tablefuncid = tablefuncid and datebeg <= trunc(sysdate)
  ) 
 
-and TABLEFUNCID = 3002
-and aggr.agentgroup  in ('{column}') -- if you want to download all groups, comment this line
+and tablefuncid = 3002
+and agentgroup.agentgroup  in ('{column}') -- if you want to download all groups, comment this line
 """
     df = pd.read_sql(query, engine)
     return df
 
 def process_data(df):
     # Convert 'VALUE' column to string type
-    df['ЗНАЧЕНИЕ'] = df['ЗНАЧЕНИЕ'].astype(str)
+    df['value'] = df['value'].astype(str)
 
     try:
         # Group by repeated values in specific columns
-        group_counts = df.groupby(['ЗНАЧЕНИЕ', 'РЕГИОН', 'БСОТ', 'БСДО', 'ТИПТС', 'ГРУППААГЕНТОВ']).size()
+        group_counts = df.groupby(['value', 'region', 'bsot', 'bsdo', 'tipts', 'grupaagentov']).size()
         # Find groups that repeat more than once
         reaped_group = group_counts[group_counts > 1].index
         # Check if reaped_group is empty
@@ -145,20 +145,20 @@ def process_data(df):
             return df
         else:
             # Show these groups
-            filter_df = df[df.set_index(['ЗНАЧЕНИЕ', 'РЕГИОН', 'БСОТ', 'БСДО', 'ТИПТС', 'ГРУППААГЕНТОВ']).index.isin(reaped_group)]
+            filter_df = df[df.set_index(['value', 'region', 'bsot', 'bsdo', 'tipts', 'grupaagentov']).index.isin(reaped_group)]
             
             # Find values with repetitions
             result_df = pd.DataFrame()
-            for name, group in filter_df.groupby(['ЗНАЧЕНИЕ', 'РЕГИОН', 'БСОТ', 'БСДО', 'ТИПТС', 'ГРУППААГЕНТОВ']):
-                if len(group["ТИПАГЕНТА"].unique()) == 2 and set(group["ТИПАГЕНТА"].unique()) == {"ФЛ", "ЮЛ"}:
+            for name, group in filter_df.groupby(['value', 'region', 'bsot', 'bsdo', 'tipts', 'grupaagentov']):
+                if len(group["tipagenta"].unique()) == 2 and set(group["tipagenta"].unique()) == {"fl", "ul"}:
                     combaind_row = group.iloc[0].copy()
-                    combaind_row["ТИПАГЕНТА"] = "ФЛ\ЮЛ"
+                    combaind_row["tipagenta"] = "fl\\ul"
                     result_df = pd.concat([result_df, pd.DataFrame([combaind_row])], ignore_index=True)
                     
             # Group by needed columns
-            group_counts = result_df.groupby(['РЕГИОН', 'ТИПТС', 'ГРУППААГЕНТОВ']).size()
+            group_counts = result_df.groupby(['region', 'tipts', 'grupaagentov']).size()
             reaped_group = group_counts[group_counts > 1].index
-            filter_df = result_df[result_df.set_index(['РЕГИОН', 'ТИПТС', 'ГРУППААГЕНТОВ']).index.isin(reaped_group)]
+            filter_df = result_df[result_df.set_index(['region', 'tipts', 'grupaagentov']).index.isin(reaped_group)]
             
     except KeyError as e:
         pass
@@ -168,7 +168,7 @@ def process_data(df):
 # New function
 def combine_rows(filter_df):
     combined_df = pd.DataFrame()
-    for name, group in filter_df.groupby(['REGION', 'TYPES', 'AGENTGROUP', 'AGENTTYPE']):
+    for name, group in filter_df.groupby(['region', 'types', 'agentgroup', 'agenttype']):
         group = group.drop_duplicates()
         while len(group) > 1:
             combinated = False
@@ -177,43 +177,43 @@ def combine_rows(filter_df):
                     row1, row2 = group.iloc[i], group.iloc[j]
                     combinated_row = row1.copy()
                     # Check if the values in the rows are the same for specific columns
-                    if (row1['TEROT'] == row2['TEROT'] and row1['TERDO'] == row2['TERDO']) and (str(row1['VALUE']) in str(row2['VALUE']) or str(row2['VALUE']) in str(row1['VALUE'])):
-                        combinated_row['VALUE'] = max(row1['VALUE'], row2['VALUE'])
-                        combinated_row['TEROT'] = min(row1['TEROT'], row2['TEROT'])
-                        combinated_row['TERDO'] = max(row1['TERDO'], row2['TERDO'])
+                    if (row1['terot'] == row2['terot'] and row1['terdo'] == row2['terdo']) and (str(row1['value']) in str(row2['value']) or str(row2['value']) in str(row1['value'])):
+                        combinated_row['value'] = max(row1['value'], row2['value'])
+                        combinated_row['terot'] = min(row1['terot'], row2['terot'])
+                        combinated_row['terdo'] = max(row1['terdo'], row2['terdo'])
                         group = group.drop([group.index[i], group.index[j]])
                         combinated = True
                         break
-                    elif (row1['BSOT'] == row2['BSOT'] and row1['BSDO'] == row2['BSDO']) and (str(row1['VALUE']) in str(row2['VALUE']) or str(row2['VALUE']) in str(row1['VALUE'])):
-                        combinated_row['VALUE'] = max(row1['VALUE'], row2['VALUE'])
-                        combinated_row['BSOT'] = min(row1['BSOT'], row2['BSOT'])
-                        combinated_row['BSDO'] = max(row1['BSDO'], row2['BSDO'])
+                    elif (row1['bsot'] == row2['bsot'] and row1['bsdo'] == row2['bsdo']) and (str(row1['value']) in str(row2['value']) or str(row2['value']) in str(row1['value'])):
+                        combinated_row['value'] = max(row1['value'], row2['value'])
+                        combinated_row['bsot'] = min(row1['bsot'], row2['bsot'])
+                        combinated_row['bsdo'] = max(row1['bsdo'], row2['bsdo'])
                         group = group.drop([group.index[i], group.index[j]])
                         combinated = True
                         break
                     # If both values contain slashes, process them separately
-                    elif '/' in str(row1['VALUE']) and '/' in str(row2['VALUE']):
-                        parts1 = str(row1['VALUE']).split('/')
-                        parts2 = str(row2['VALUE']).split('/')
+                    elif '/' in str(row1['value']) and '/' in str(row2['value']):
+                        parts1 = str(row1['value']).split('/')
+                        parts2 = str(row2['value']).split('/')
                         min_part = min(float(parts1[0]), float(parts2[0]))
                         max_part = max(float(parts1[1]), float(parts2[1]))
-                        combinated_row['VALUE'] = f"{min_part}/{max_part}"
+                        combinated_row['value'] = f"{min_part}/{max_part}"
                     # If neither value contains a slash, process them as regular numbers
-                    elif '/' not in str(row1['VALUE']) and '/' not in str(row2['VALUE']):
-                        combinated_row['VALUE'] = f"{min(float(row1['VALUE']), float(row2['VALUE']))}/{max(float(row1['VALUE']), float(row2['VALUE']))}"
+                    elif '/' not in str(row1['value']) and '/' not in str(row2['value']):
+                        combinated_row['value'] = f"{min(float(row1['value']), float(row2['value']))}/{max(float(row1['value']), float(row2['value']))}"
                     else:
                         break
 
                     # Check if one value contains the other
-                    if str(row1['VALUE']) in str(row2['VALUE']):
-                        combinated_row['VALUE'] = row2['VALUE']
-                    elif str(row2['VALUE']) in str(row1['VALUE']):
-                        combinated_row['VALUE'] = row1['VALUE']
+                    if str(row1['value']) in str(row2['value']):
+                        combinated_row['value'] = row2['value']
+                    elif str(row2['value']) in str(row1['value']):
+                        combinated_row['value'] = row1['value']
 
                     # List of column pairs for updating values
-                    value_pairs = [ ('BSOT', 'BSDO'), ('TEROT', 'TERDO'), ('KOT', 'KDO'), ('KMOT', 'KMDO'), ('KTOT', 'KTDO'), 
-                                   ('PROLOT', 'PROLDO'), ('MINVOT', 'MINVDO'), ('YLOT', 'YLD'), ('KASKOOUT', 'KASKODO'), ('KBMOT', 'KBMDO'),
-                                   ('EOSAGOO', 'EOSAGOD'), ('DSOT', 'DSDO'), ('KSOT', 'KSDO'), ('KPOT', 'KPDO'), ('PRESENCEOFOTHERINSOT', 'PRESENCEOFOTHERINSDO')]
+                    value_pairs = [ ('bsot', 'bsdo'), ('terot', 'terdo'), ('kot', 'kdo'), ('kmot', 'kmdo'), ('ktot', 'ktdo'), 
+                                   ('prolot', 'proldo'), ('minvot', 'minvdo'), ('ylot', 'yld'), ('kaskoout', 'kaskodo'), ('kbmot', 'kbmdo'),
+                                   ('eosagoo', 'eosagod'), ('dsot', 'dsdo'), ('ksot', 'ksdo'), ('kpot', 'kpdo'), ('presenceofotherinsot', 'presenceofotherinsdo')]
 
                     # Update the pairs of values
                     for col_ot, col_do in value_pairs:
@@ -227,8 +227,6 @@ def combine_rows(filter_df):
                     break
                 if combinated:
                     break
-            if not combinated:
-                break
         
         combined_df = pd.concat([combined_df, group], ignore_index=True)
     
